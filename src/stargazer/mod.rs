@@ -1,7 +1,9 @@
 use std::fmt;
 use std::error;
 use std::str::FromStr;
+
 pub mod coord;
+pub mod lst;
 
 #[derive(Debug)]
 pub enum Kind {
@@ -28,6 +30,19 @@ pub struct Position {
     pub declination: coord::DMS,
 }
 
+/*
+impl Position {
+    // TODO Add HMS via decimal ?
+    pub fn get_LHA(&self) -> coord::HMS {
+        let utc_str = lst::utc_str();
+        let jd = lst::jd(&utc_str);
+        let era = lst::era(jd);
+        let lst_deg = lst::lst_at_lon(1.44, era);
+        let lst_HMS = coord::degrees_to_HMS(lst_deg)
+    }
+}
+*/
+ 
 impl FromStr for Position {
     type Err = Box<dyn error::Error>;
     fn from_str(s: &str) -> Result<Self, Box<dyn error::Error>> {

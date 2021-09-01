@@ -1,5 +1,6 @@
 use std::fmt;
 use std::error;
+use std::ops;
 use std::str::FromStr;
 
 pub struct HMS {
@@ -61,6 +62,32 @@ impl FromStr for DMS {
             seconds: seconds,
         };
         Ok(dms)
+    }
+}
+
+/*
+impl ops::Add<HMS> for HMS {
+    type Output = HMS;
+    // TODO: Decimal representation
+    fn add(self, _rhs: HMS) -> HMS {
+        HMS {
+            hours: self.hours + _rhs.hours,
+            minutes: self.minutes + _rhs.minutes,
+            seconds: self.seconds + _rhs.seconds,
+        }
+    }
+}
+*/
+
+pub fn degrees_to_HMS(degrees: f64) -> HMS {
+    let time = (degrees % 360.) * 24. / 360.;
+    let hours = time.floor();
+    let minutes = (time*60.) % 60.;
+    let seconds = (time*3600.) % 60.;
+    HMS {
+        hours: hours as i32,
+        minutes: minutes as i32,
+        seconds: seconds,
     }
 }
 
