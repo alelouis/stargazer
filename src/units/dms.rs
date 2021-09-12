@@ -33,9 +33,9 @@ impl FromStr for DMS {
         let minutes = vec[1].parse()?;
         let seconds = vec[2].parse()?;
         let dms = DMS {
-            degrees: degrees,
-            minutes: minutes,
-            seconds: seconds,
+            degrees,
+            minutes,
+            seconds,
         };
         Ok(dms)
     }

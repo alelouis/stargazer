@@ -25,7 +25,7 @@ impl HMS {
         HMS {
             hours: hours as i32,
             minutes: minutes as i32,
-            seconds: seconds,
+            seconds,
         }
     }
 }
@@ -45,9 +45,9 @@ impl FromStr for HMS {
         let minutes = vec[1].parse()?;
         let seconds = vec[2].parse()?;
         let hms = HMS {
-            hours: hours,
-            minutes: minutes,
-            seconds: seconds,
+            hours,
+            minutes,
+            seconds,
         };
         Ok(hms)
     }
