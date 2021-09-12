@@ -5,3 +5,5 @@ edition = "2018"
 
 [dependencies]
 bevy = "0.5"
+hifitime = "2"
+chrono = "0.4"
