@@ -11,19 +11,30 @@ struct Path3D(Vec<Vector4<f32>>);
 struct Constellation;
 struct Path2D(Vec<Vector4<f32>>);
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    Menu,
+    Main,
+}
 impl Plugin for MainState {
     fn build(&self, app: &mut AppBuilder){
         app
             .insert_resource(Fov(1.6))
             .add_plugin(DebugLinesPlugin)
-            .add_startup_system(setup_2d_camera.system())
-            .add_startup_system(setup_equatorial_grid.system())
-            .add_startup_system(setup_constellations.system())
-            .add_system(projection.system())
-            //.add_system(render_2d_vertices.system())
-            .add_system(render_2d_paths.system())
-            .add_system(despawn_2d_paths.system())
-            .add_system(fov_adjust.system());
+            .add_state(AppState::Main)
+            // MainState Setup
+            .add_system_set(SystemSet::on_enter(AppState::Main)
+                .with_system(setup_2d_camera.system())
+                .with_system(setup_2d_camera.system())
+                .with_system(setup_equatorial_grid.system())
+                .with_system(setup_constellations.system()))
+            // MainState Update
+            .add_system_set(SystemSet::on_update(AppState::Main)
+                .with_system(projection.system())
+                //.with_system(render_2d_vertices.system())
+                .with_system(render_2d_paths.system())
+                .with_system(despawn_2d_paths.system())
+                .with_system(fov_adjust.system()));
     }
 }
 
