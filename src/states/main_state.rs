@@ -1,42 +1,43 @@
 use bevy::prelude::*;
 use bevy::{input::mouse::{MouseWheel}};
 use cgmath::{Rad, perspective, Matrix4, Vector4, Vector3};
-use stargazer::units::polar::Polar;
-use bevy_prototype_debug_lines::{ DebugLinesPlugin, DebugLines };
+use crate::units::polar::Polar;
+use bevy_prototype_debug_lines::{DebugLinesPlugin, DebugLines};
 use std::fs::File;
+pub struct MainState;
 
 struct Fov(f32);
 struct Path3D(Vec<Vector4<f32>>);
 struct Constellation;
 struct Path2D(Vec<Vector4<f32>>);
 
-fn main() {
-    App::build()
-        //.insert_resource(Msaa { samples: 4 })
-        .insert_resource(Fov(1.6))
-        .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
-        .insert_resource(WindowDescriptor {width: 800.0, height: 500.0, ..Default::default()})
-        .add_plugins(DefaultPlugins)
-        .add_plugin(DebugLinesPlugin)
-        .add_startup_system(setup.system())
-        .add_startup_system(setup_equatorial_grid.system())
-        .add_startup_system(setup_constellations.system())
-        .add_system(projection.system())
-        //.add_system(render_2d_vertices.system())
-        .add_system(render_2d_paths.system())
-        .add_system(despawn_2d_paths.system())
-        .add_system(fov_adjust.system())
-        .run();
+impl Plugin for MainState {
+    fn build(&self, app: &mut AppBuilder){
+        app
+            .insert_resource(Fov(1.6))
+            .add_plugin(DebugLinesPlugin)
+            .add_startup_system(setup_2d_camera.system())
+            .add_startup_system(setup_equatorial_grid.system())
+            .add_startup_system(setup_constellations.system())
+            .add_system(projection.system())
+            //.add_system(render_2d_vertices.system())
+            .add_system(render_2d_paths.system())
+            .add_system(despawn_2d_paths.system())
+            .add_system(fov_adjust.system());
+    }
 }
 
-fn setup(
-mut commands: Commands
-) {
-    let mut camera = OrthographicCameraBundle::new_2d();
-    camera.transform = Transform::from_translation(Vec3::new(0.0, 0.0, 100.0));
-    commands.spawn_bundle(camera);
-}
 
+/// Instanciate 2D camera view
+fn setup_2d_camera(
+    mut commands: Commands
+){
+        let mut camera = OrthographicCameraBundle::new_2d();
+        camera.transform = Transform::from_translation(Vec3::new(0.0, 0.0, 100.0));
+        commands.spawn_bundle(camera);
+    }
+
+/// Initialize constellations 3D paths from files
 fn setup_constellations(
     mut commands: Commands
 ) {
@@ -57,6 +58,7 @@ fn setup_constellations(
     commands.spawn().insert(Path3D(path)).insert(Constellation);
 }
 
+/// Initialize equatorial grid 3D paths
 fn setup_equatorial_grid(
     mut commands: Commands
 ) {
@@ -89,6 +91,7 @@ fn setup_equatorial_grid(
     }
 }
 
+/// Project all 3D paths to 2D paths
 fn projection(
     mut commands: Commands,
     time: Res<Time>, 
@@ -119,6 +122,7 @@ fn projection(
     }
 }
 
+/// Clear all 2D path for next redraw
 fn despawn_2d_paths(
     mut commands: Commands,
     mut query: Query<(Entity, With<Path2D>)>
@@ -128,6 +132,7 @@ fn despawn_2d_paths(
     }
 }
 
+/// Render 2D paths with lines
 fn render_2d_paths(
     mut lines: ResMut<DebugLines>, 
     mut query: Query<(&mut Path2D, Option<&Constellation>)>,
@@ -153,6 +158,7 @@ fn render_2d_paths(
     }
 }
 
+/// Render vertices with crosshairs
 fn render_2d_vertices(
     mut lines: ResMut<DebugLines>, 
     mut query: Query<&mut Path2D>,
@@ -181,6 +187,7 @@ fn render_2d_vertices(
     }
 }
 
+/// Adjust field of view with mousewheel or trackpad
 fn fov_adjust(
     mut scroll_evr: EventReader<MouseWheel>, 
     mut fov: ResMut<Fov>
