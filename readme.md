@@ -21,8 +21,8 @@ Stargazer is in early development (started early September 2021). The current en
 - [x] Constellation render from file
 
 ## To Do (not in order)
-- [] Camera movement from mouse
-- [] Align 3D world coordinates to RA/DEC and cardinal points
-- [] RA/DEC star coordinate fetching from Some(api)
-- [] Aesthetic concerns
-- [] Multiple states (menu, config, etc...)
+- [ ] Camera movement from mouse
+- [ ] Align 3D world coordinates to RA/DEC and cardinal points
+- [ ] RA/DEC star coordinate fetching from Some(api)
+- [ ] Aesthetic concerns
+- [ ] Multiple states (menu, config, etc...)
