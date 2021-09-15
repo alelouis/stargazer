@@ -26,3 +26,6 @@ Stargazer is in early development (started early September 2021). The current en
 - [ ] RA/DEC star coordinate fetching from Some(api)
 - [ ] Aesthetic concerns
 - [ ] Multiple states (menu, config, etc...)
+
+---------------
+https://user-images.githubusercontent.com/6841652/133496504-cdf62d71-7fd2-44d4-a5d5-6befbe9e16dd.mp4
