@@ -15,12 +15,12 @@ This project serves as a proxy for me to get better at:
 ## Status
 Stargazer is in early development (started early September 2021). The current envisioned features implemented/to be impleted are listed below.
 
-## Done
+### Done
 - [x] Custom 3D to 2D projection
 - [x] Equatorial grid render from paths
 - [x] Constellation render from file
 
-## To Do (not in order)
+### To Do (not in order)
 - [ ] Camera movement from mouse
 - [ ] Align 3D world coordinates to RA/DEC and cardinal points
 - [ ] RA/DEC star coordinate fetching from Some(api)
