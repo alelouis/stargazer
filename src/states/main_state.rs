@@ -1,46 +1,41 @@
 use bevy::prelude::*;
-use bevy::{input::mouse::{MouseWheel}};
+use bevy::{input::mouse::{MouseWheel, MouseMotion, MouseButtonInput}};
 use cgmath::{Rad, perspective, Matrix4, Vector4, Vector3};
-use crate::units::polar::Polar;
 use bevy_prototype_debug_lines::{DebugLinesPlugin, DebugLines};
 use std::fs::File;
+use crate::units::polar::Polar;
 pub struct MainState;
 
 struct Fov(f32);
+struct Camera{rot_x: f32, rot_y: f32}
 struct Path3D(Vec<Vector4<f32>>);
 struct Constellation;
 struct Path2D(Vec<Vector4<f32>>);
+struct MouseButtonPressed(bool);
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-enum AppState {
-    Menu,
-    Main,
-}
 impl Plugin for MainState {
     fn build(&self, app: &mut AppBuilder){
         app
             .insert_resource(Fov(1.6))
+            .insert_resource(Camera{rot_x: 0., rot_y: 0.})
+            .insert_resource(MouseButtonPressed(false))
             .add_plugin(DebugLinesPlugin)
-            .add_state(AppState::Main)
-            // MainState Setup
-            .add_system_set(SystemSet::on_enter(AppState::Main)
-                .with_system(setup_2d_camera.system())
-                .with_system(setup_2d_camera.system())
-                .with_system(setup_equatorial_grid.system())
-                .with_system(setup_constellations.system()))
-            // MainState Update
-            .add_system_set(SystemSet::on_update(AppState::Main)
-                .with_system(projection.system())
-                //.with_system(render_2d_vertices.system())
-                .with_system(render_2d_paths.system())
-                .with_system(despawn_2d_paths.system())
-                .with_system(fov_adjust.system()));
+            .add_startup_system(setup_2d_camera.system())
+            .add_startup_system(setup_2d_camera.system())
+            .add_startup_system(setup_equatorial_grid.system())
+            .add_startup_system(setup_constellations.system())
+            .add_system(projection.system())
+            //.with_system(render_2d_vertices.system())
+            .add_system(render_2d_paths.system())
+            .add_system(despawn_2d_paths.system())
+            .add_system(fov_adjust.system())
+            .add_system(orbit_camera.system());
     }
 }
 
 
 /// Instanciate 2D camera view
-fn setup_2d_camera(
+pub fn setup_2d_camera(
     mut commands: Commands
 ){
         let mut camera = OrthographicCameraBundle::new_2d();
@@ -106,16 +101,17 @@ fn setup_equatorial_grid(
 fn projection(
     mut commands: Commands,
     time: Res<Time>, 
-    fov: ResMut<Fov>, 
+    fov: ResMut<Fov>,
+    camera: ResMut<Camera>, 
     mut query: Query<(&mut Path3D, Option<&Constellation>)>,
     wd: ResMut<WindowDescriptor>,
 ) {
-    let t: f32 = time.seconds_since_startup() as f32/3.;
+    let t: f32 = time.seconds_since_startup() as f32/10.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
-    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t));
-    let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(-1.1));
+    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
+    let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
 
     for (path, constellation) in query.iter_mut() { 
@@ -202,7 +198,7 @@ fn render_2d_vertices(
 fn fov_adjust(
     mut scroll_evr: EventReader<MouseWheel>, 
     mut fov: ResMut<Fov>
-) {
+){
     use bevy::input::mouse::MouseScrollUnit;
     for ev in scroll_evr.iter() {
         match ev.unit {
@@ -216,6 +212,23 @@ fn fov_adjust(
     }
 }
 
-
-
-
+fn orbit_camera(
+    mut camera: ResMut<Camera>,
+    mut mouse_pressed: ResMut<MouseButtonPressed>,
+    mut motion_evr: EventReader<MouseMotion>,
+    mut mousebtn_evr: EventReader<MouseButtonInput>,
+){
+    use bevy::input::ElementState;
+    for ev in mousebtn_evr.iter() {
+        match ev.state {
+            ElementState::Pressed => {mouse_pressed.0 = true;}
+            ElementState::Released => {mouse_pressed.0 = false;}
+        }
+    }
+    if mouse_pressed.0 {
+        for ev in motion_evr.iter(){
+            camera.rot_x -= ev.delta.y as f32 / 300.;
+            camera.rot_y -= ev.delta.x as f32 / 300.;
+        }
+    }
+}
