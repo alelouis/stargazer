@@ -33,7 +33,6 @@ impl Plugin for MainState {
     }
 }
 
-
 /// Instanciate 2D camera view
 pub fn setup_2d_camera(
     mut commands: Commands
@@ -70,7 +69,7 @@ fn setup_equatorial_grid(
 ) {
     let phi_split = 20;
     let theta_split = 20;
-    let resolution = 50;
+    let resolution = 80;
     // phi circles
     for split in 0..phi_split+1 {
         let mut vertices = vec![];
@@ -106,7 +105,7 @@ fn projection(
     mut query: Query<(&mut Path3D, Option<&Constellation>)>,
     wd: ResMut<WindowDescriptor>,
 ) {
-    let t: f32 = time.seconds_since_startup() as f32/10.;
+    let t: f32 = time.seconds_since_startup() as f32/20.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
@@ -213,6 +212,7 @@ fn fov_adjust(
 }
 
 fn orbit_camera(
+    fov: ResMut<Fov>,
     mut camera: ResMut<Camera>,
     mut mouse_pressed: ResMut<MouseButtonPressed>,
     mut motion_evr: EventReader<MouseMotion>,
@@ -227,8 +227,8 @@ fn orbit_camera(
     }
     if mouse_pressed.0 {
         for ev in motion_evr.iter(){
-            camera.rot_x -= ev.delta.y as f32 / 300.;
-            camera.rot_y -= ev.delta.x as f32 / 300.;
+            camera.rot_x -= fov.0 / 3.14 * ev.delta.y as f32 / 300.;
+            camera.rot_y -= fov.0 / 3.14 * ev.delta.x as f32 / 300.;
         }
     }
 }

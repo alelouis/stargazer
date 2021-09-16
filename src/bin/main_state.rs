@@ -1,12 +1,6 @@
 use bevy::prelude::*;
 use stargazer::states::main_state::MainState;
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-enum AppState {
-    Menu,
-    Main,
-}
-
 fn main() {
     App::build()
         //.insert_resource(Msaa { samples: 4 }) 
