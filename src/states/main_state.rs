@@ -29,11 +29,11 @@ impl Plugin for MainState {
             .add_startup_system(setup_sprites.system())
             .add_system(projection.system())
             //.with_system(render_2d_vertices.system())
+            .add_system(draw_stars.system())
             .add_system(render_2d_paths.system())
             .add_system(despawn_2d_paths.system())
             .add_system(fov_adjust.system())
-            .add_system(orbit_camera.system())
-            .add_system(draw_stars.system());
+            .add_system(orbit_camera.system());
     }
 }
 
@@ -43,7 +43,7 @@ pub fn setup_sprites(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ){
-    let sprite_handle = materials.add(asset_server.load("star_patrick.png").into());
+    let sprite_handle = materials.add(asset_server.load("star.png").into());
     let file_path = "assets/stars.csv";
     let file = File::open(file_path).unwrap();
     let mut rdr = csv::ReaderBuilder::new()
@@ -62,7 +62,7 @@ pub fn setup_sprites(
                 rotation: Quat::from_rotation_z(0.),
                 scale: Vec3::splat(1.),
             },
-            sprite: Sprite::new(Vec2::splat(100.)),
+            sprite: Sprite::new(Vec2::splat(5.)),
             ..Default::default()
         }).insert(Star).insert(Position3D(p));
     }
@@ -110,7 +110,7 @@ fn draw_stars(
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
-    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
+    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
 
@@ -169,7 +169,7 @@ fn projection(
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
-    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
+    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
 
