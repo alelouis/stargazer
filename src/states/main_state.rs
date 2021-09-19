@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::{input::mouse::{MouseWheel, MouseMotion, MouseButtonInput}};
+use bevy::{core::FixedTimestep, input::mouse::{MouseWheel, MouseMotion, MouseButtonInput}};
 use cgmath::{Rad, perspective, Matrix4, Vector4, Vector3};
 use bevy_prototype_debug_lines::{DebugLinesPlugin, DebugLines};
 use std::fs::File;
@@ -17,6 +17,7 @@ struct Position3D(Vector4<f32>);
 
 impl Plugin for MainState {
     fn build(&self, app: &mut AppBuilder){
+        const TIME_STEP: f32 = 1.0 / 100.0;
         app
             .insert_resource(Fov(1.6))
             .insert_resource(Camera{rot_x: 0., rot_y: 0.})
@@ -27,8 +28,12 @@ impl Plugin for MainState {
             .add_startup_system(setup_equatorial_grid.system())
             .add_startup_system(setup_constellations.system())
             .add_startup_system(setup_sprites.system())
-            .add_system(path_projection.system())
-            .add_system(draw_stars.system())
+            .add_system_set(
+                SystemSet::new()
+                    .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                    .with_system(path_projection.system())
+                    .with_system(draw_stars.system())
+                )
             .add_system(render_2d_paths.system())
             .add_system(fov_adjust.system())
             .add_system(orbit_camera.system());
@@ -36,7 +41,7 @@ impl Plugin for MainState {
 }
 
 /// Initialize sprites
-pub fn setup_sprites(
+fn setup_sprites(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -67,7 +72,7 @@ pub fn setup_sprites(
 }
 
 /// Instanciate 2D camera view
-pub fn setup_2d_camera(
+fn setup_2d_camera(
     mut commands: Commands
 ){
         let mut camera = OrthographicCameraBundle::new_2d();
@@ -236,6 +241,7 @@ fn fov_adjust(
     }
 }
 
+/// Camera controller
 fn orbit_camera(
     fov: ResMut<Fov>,
     mut camera: ResMut<Camera>,
