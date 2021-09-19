@@ -26,7 +26,7 @@ impl Plugin for MainState {
             .add_startup_system(setup_2d_camera.system())
             .add_startup_system(setup_2d_camera.system())
             .add_startup_system(setup_equatorial_grid.system())
-            .add_startup_system(setup_constellations.system())
+            //.add_startup_system(setup_constellations.system())
             .add_startup_system(setup_sprites.system())
             .add_system_set(
                 SystemSet::new()
@@ -58,6 +58,7 @@ fn setup_sprites(
         .from_reader(file);
     for result in rdr.records() {
         let record = result.unwrap();
+        let mag = record.get(3).unwrap().parse::<f32>().unwrap();
         let p = Polar{
             theta: record.get(1).unwrap().parse::<f32>().unwrap(), 
             phi: record.get(2).unwrap().parse::<f32>().unwrap(), 
@@ -69,7 +70,7 @@ fn setup_sprites(
                 rotation: Quat::from_rotation_z(0.),
                 scale: Vec3::splat(1.),
             },
-            sprite: Sprite::new(Vec2::splat(5.)),
+            sprite: Sprite::new(Vec2::splat(f32::max(5. - mag, 1.))),
             ..Default::default()
         }).insert(Star).insert(Position3D(p));
     }
@@ -118,10 +119,10 @@ fn draw_stars(
 ){
     let w = wd.width;
     let h = wd.height;
-    let t: f32 = time.seconds_since_startup() as f32/20.;
+    let t: f32 = time.seconds_since_startup() as f32/60.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
-    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
+    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., -1.5));
     let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
@@ -182,10 +183,10 @@ fn path_projection(
     mut query: Query<(&mut Path2D, &mut Path3D)>,
     wd: ResMut<WindowDescriptor>,
 ){
-    let t: f32 = time.seconds_since_startup() as f32/20.;
+    let t: f32 = time.seconds_since_startup() as f32/60.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
-    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
+    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., -1.5));
     let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
@@ -212,7 +213,7 @@ fn render_2d_paths(
     for (path, constellation) in query.iter_mut() {
         let color = match constellation {
             Some(x) => Color::RED,
-            None => Color::GRAY,
+            None => Color::Rgba{red: 1., green: 1., blue: 1., alpha: 0.05},
         };
         let mesh = &path.0;
         for m in 0..mesh.len()-1 {

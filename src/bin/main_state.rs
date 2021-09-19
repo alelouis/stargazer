@@ -11,7 +11,7 @@ fn main() {
             ..Default::default()
         })
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
-        .insert_resource(WindowDescriptor {width: 800.0, height: 500.0, ..Default::default()})
+        .insert_resource(WindowDescriptor {width: 500.0, height: 500.0, ..Default::default()})
         //.add_plugin(LogDiagnosticsPlugin::default())
         //.add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
