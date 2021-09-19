@@ -12,6 +12,8 @@ struct Path3D(Vec<Vector4<f32>>);
 struct Constellation;
 struct Path2D(Vec<Vector4<f32>>);
 struct MouseButtonPressed(bool);
+struct Star;
+struct Position3D(Vector4<f32>);
 
 impl Plugin for MainState {
     fn build(&self, app: &mut AppBuilder){
@@ -24,15 +26,47 @@ impl Plugin for MainState {
             .add_startup_system(setup_2d_camera.system())
             .add_startup_system(setup_equatorial_grid.system())
             .add_startup_system(setup_constellations.system())
+            .add_startup_system(setup_sprites.system())
             .add_system(projection.system())
             //.with_system(render_2d_vertices.system())
             .add_system(render_2d_paths.system())
             .add_system(despawn_2d_paths.system())
             .add_system(fov_adjust.system())
-            .add_system(orbit_camera.system());
+            .add_system(orbit_camera.system())
+            .add_system(draw_stars.system());
     }
 }
 
+
+pub fn setup_sprites(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+){
+    let sprite_handle = materials.add(asset_server.load("star_patrick.png").into());
+    let file_path = "assets/stars.csv";
+    let file = File::open(file_path).unwrap();
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(file);
+    for result in rdr.records() {
+        let record = result.unwrap();
+        let p = Polar{
+            theta: record.get(1).unwrap().parse::<f32>().unwrap(), 
+            phi: record.get(2).unwrap().parse::<f32>().unwrap(), 
+            radius: 1.}.to_cart();
+        commands.spawn_bundle(SpriteBundle {
+            material: sprite_handle.clone(),
+            transform: Transform {
+                translation: Vec3::new(0., 0., 0.),
+                rotation: Quat::from_rotation_z(0.),
+                scale: Vec3::splat(1.),
+            },
+            sprite: Sprite::new(Vec2::splat(100.)),
+            ..Default::default()
+        }).insert(Star).insert(Position3D(p));
+    }
+}
 /// Instanciate 2D camera view
 pub fn setup_2d_camera(
     mut commands: Commands
@@ -61,6 +95,32 @@ fn setup_constellations(
         path.push(p);
     }
     commands.spawn().insert(Path3D(path)).insert(Constellation);
+}
+
+fn draw_stars(
+    mut query: Query<(&mut Transform, &mut Position3D, With<Star>)>,
+    time: Res<Time>, 
+    fov: ResMut<Fov>,
+    camera: ResMut<Camera>, 
+    wd: ResMut<WindowDescriptor>,
+){
+    let w = wd.width;
+    let h = wd.height;
+    let t: f32 = time.seconds_since_startup() as f32/20.;
+    let aspect = wd.width / wd.height;
+    let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
+    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
+    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
+    let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
+    let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
+
+    for (mut transform, position3d, _) in query.iter_mut() {
+        let translation = &mut transform.translation;
+        let vertex_proj = proj_m * translate_m * rotation_z_m * rotation_x_m * rotation_y_m * position3d.0;
+        let vertex_proj = vertex_proj / vertex_proj[3];
+        translation.x = vertex_proj[0]*w;
+        translation.y = vertex_proj[1]*h;
+    }
 }
 
 /// Initialize equatorial grid 3D paths
