@@ -1,1 +1,2 @@
-pub mod main_state;
+pub mod stars;
+pub mod menu;
