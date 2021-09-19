@@ -119,7 +119,7 @@ fn draw_stars(
 ){
     let w = wd.width;
     let h = wd.height;
-    let t: f32 = time.seconds_since_startup() as f32/60.;
+    let t: f32 = time.seconds_since_startup() as f32/1.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., -1.5));
@@ -183,7 +183,7 @@ fn path_projection(
     mut query: Query<(&mut Path2D, &mut Path3D)>,
     wd: ResMut<WindowDescriptor>,
 ){
-    let t: f32 = time.seconds_since_startup() as f32/60.;
+    let t: f32 = time.seconds_since_startup() as f32/1.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., -1.5));
