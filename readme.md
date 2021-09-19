@@ -20,12 +20,17 @@ Stargazer is in early development (started early September 2021). The current en
 - [x] Equatorial grid render from paths
 - [x] Constellation render from file
 - [x] Camera movement from mouse
+- [x] RA/DEC star coordinate fetching from Some(api)
+- [x] Processing star data to theta/phi coordinates
+- [x] Drawing stars individually from sprite
 
 ### To Do (not in order)
 - [ ] Align 3D world coordinates to RA/DEC and cardinal points
-- [ ] RA/DEC star coordinate fetching from Some(api)
 - [ ] Aesthetic concerns
 - [ ] Multiple states (menu, config, etc...)
 
 ---------------
-https://user-images.githubusercontent.com/6841652/133496504-cdf62d71-7fd2-44d4-a5d5-6befbe9e16dd.mp4
+
+https://user-images.githubusercontent.com/6841652/133923382-85363336-837d-4402-91f4-a62a43e18de1.mp4
+
+
