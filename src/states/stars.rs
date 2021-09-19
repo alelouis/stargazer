@@ -5,6 +5,7 @@ use bevy_prototype_debug_lines::{DebugLinesPlugin, DebugLines};
 use std::fs::File;
 use crate::consts::*;
 use crate::units::polar::Polar;
+use bevy::ecs::component::Component;
 
 pub struct Stars;
 struct Fov(f32);
@@ -33,13 +34,39 @@ impl Plugin for Stars {
             .with_system(render_2d_paths.system())
             .with_system(fov_adjust.system())
             .with_system(orbit_camera.system())
+            .with_system(pause.system())
         )
         .add_system_set(
             SystemSet::on_enter(AppState::Stars)
             .with_system(setup_2d_camera.system())
             .with_system(setup_equatorial_grid.system())
             .with_system(setup_sprites.system()),
+        )
+        .add_system_set(
+            SystemSet::on_exit(AppState::Stars)
+            .with_system(cleanup_system::<Path3D>.system())
+            .with_system(cleanup_system::<Path2D>.system())
+            .with_system(cleanup_system::<Star>.system())
+            .with_system(cleanup_system::<Position3D>.system())
         );
+    }
+}
+
+fn cleanup_system<T: Component>(
+    mut commands: Commands,
+    q: Query<Entity, With<T>>,
+) {
+    for e in q.iter() {
+        commands.entity(e).despawn_recursive();
+    }
+}
+
+pub fn pause(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut app_state: ResMut<State<AppState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        app_state.set(AppState::Pause).unwrap();
     }
 }
 
