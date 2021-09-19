@@ -13,7 +13,7 @@ This project serves as a proxy for me to get better at:
 ## How to use
 With Rust installed, run one of the binaries available:
 ```bash
-cargo run --bin main_state --release
+cargo run --bin app --release
 ```
 First compilation will take some time, see [dynamic linking](https://bevyengine.org/learn/book/getting-started/setup/) for faster compilation times. 
 

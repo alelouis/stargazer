@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-bevy =  "0.5"
+bevy = { version = "0.5.0", features = ["dynamic"] }
 hifitime = "2"
 chrono = "0.4"
 rand = "0.8.4"
 bevy_prototype_debug_lines = "0.3.2"
 cgmath = "0.18"
+csv = "1.1"
