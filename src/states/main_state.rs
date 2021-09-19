@@ -28,7 +28,6 @@ impl Plugin for MainState {
             .add_startup_system(setup_constellations.system())
             .add_startup_system(setup_sprites.system())
             .add_system(path_projection.system())
-            //.with_system(render_2d_vertices.system())
             .add_system(draw_stars.system())
             .add_system(render_2d_paths.system())
             .add_system(fov_adjust.system())
@@ -214,35 +213,6 @@ fn render_2d_paths(
                     Vec3::new(mesh[m+1][0]*w, mesh[m+1][1]*h, 0.), 
                     0.0,
                     color);
-            }
-        }
-    }
-}
-
-/// Render vertices with crosshairs
-fn render_2d_vertices(
-    mut lines: ResMut<DebugLines>, 
-    mut query: Query<&mut Path2D>,
-    wd: ResMut<WindowDescriptor>,
-){
-    let w = wd.width;
-    let h = wd.height;
-    for path in query.iter_mut() { 
-        let mesh = &path.0;
-        for m in 0..mesh.len() {
-            let cross_size = 5.;
-            if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) {
-                lines.line_colored(
-                    Vec3::new(mesh[m][0]*w-cross_size, mesh[m][1]*h, 0.), 
-                    Vec3::new(mesh[m][0]*w+cross_size, mesh[m][1]*h, 0.), 
-                    0.0,
-                    Color::RED);
-
-                lines.line_colored(
-                    Vec3::new(mesh[m][0]*w, mesh[m][1]*h-cross_size, 0.), 
-                    Vec3::new(mesh[m][0]*w, mesh[m][1]*h+cross_size, 0.), 
-                    0.0,
-                    Color::RED);
             }
         }
     }
