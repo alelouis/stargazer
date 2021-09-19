@@ -26,7 +26,7 @@ Stargazer is in early development (started early September 2021). The current en
 ### Done
 - [x] Custom 3D to 2D projection
 - [x] Equatorial grid render from paths
-- [x] Constellation render from file
+- [x] Constellation render from csv file
 - [x] Camera movement from mouse
 - [x] RA/DEC star coordinate fetching from Some(api)
 - [x] Processing star data to theta/phi coordinates
