@@ -6,6 +6,7 @@ use std::fs::File;
 use crate::consts::*;
 use crate::units::polar::Polar;
 use bevy::ecs::component::Component;
+use bevy_egui::{egui, EguiContext, EguiPlugin};
 
 pub struct Stars;
 struct Fov(f32);
@@ -26,6 +27,7 @@ impl Plugin for Stars {
         .insert_resource(Camera{rot_x: 0., rot_y: 0.})
         .insert_resource(MouseButtonPressed(false))
         .add_plugin(DebugLinesPlugin)
+        .add_plugin(EguiPlugin)
         .add_system_set(
             SystemSet::on_update(AppState::Stars)
             .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
@@ -35,6 +37,7 @@ impl Plugin for Stars {
             .with_system(fov_adjust.system())
             .with_system(orbit_camera.system())
             .with_system(pause.system())
+            .with_system(ui_example.system())
         )
         .add_system_set(
             SystemSet::on_enter(AppState::Stars)
@@ -50,6 +53,34 @@ impl Plugin for Stars {
             .with_system(cleanup_system::<Position3D>.system())
         );
     }
+}
+
+fn ui_example(egui_context: ResMut<EguiContext>, app_state: Res<State<AppState>>) {
+    let mut name = "Alexis".to_string();
+    let mut age = 23;
+    match app_state.current() {
+        AppState::Menu => {
+            // TODO: play menu music
+        }
+        AppState::Stars => {
+            egui::Window::new("Hello").show(egui_context.ctx(), |ui| {
+                ui.heading("My egui Application");
+                ui.horizontal(|ui| {
+                    ui.label("Your name: ");
+                    ui.text_edit_singleline(&mut name);
+                });
+                ui.add(egui::Slider::new(&mut age, 0..=120).text("age"));
+                if ui.button("Click each year").clicked() {
+                    age += 1;
+                }
+                ui.label(format!("Hello '{}', age {}", name, age));
+            });
+        }
+        AppState::Pause => {
+            // TODO: play pause screen music
+        }
+    }
+
 }
 
 fn cleanup_system<T: Component>(
