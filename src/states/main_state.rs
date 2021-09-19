@@ -5,12 +5,12 @@ use bevy_prototype_debug_lines::{DebugLinesPlugin, DebugLines};
 use std::fs::File;
 use crate::units::polar::Polar;
 pub struct MainState;
-
 struct Fov(f32);
 struct Camera{rot_x: f32, rot_y: f32}
 struct Path3D(Vec<Vector4<f32>>);
-struct Constellation;
 struct Path2D(Vec<Vector4<f32>>);
+struct Grid;
+struct Constellation;
 struct MouseButtonPressed(bool);
 struct Star;
 struct Position3D(Vector4<f32>);
@@ -27,17 +27,16 @@ impl Plugin for MainState {
             .add_startup_system(setup_equatorial_grid.system())
             .add_startup_system(setup_constellations.system())
             .add_startup_system(setup_sprites.system())
-            .add_system(projection.system())
+            .add_system(path_projection.system())
             //.with_system(render_2d_vertices.system())
             .add_system(draw_stars.system())
             .add_system(render_2d_paths.system())
-            .add_system(despawn_2d_paths.system())
             .add_system(fov_adjust.system())
             .add_system(orbit_camera.system());
     }
 }
 
-
+/// Initialize sprites
 pub fn setup_sprites(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -67,6 +66,7 @@ pub fn setup_sprites(
         }).insert(Star).insert(Position3D(p));
     }
 }
+
 /// Instanciate 2D camera view
 pub fn setup_2d_camera(
     mut commands: Commands
@@ -94,9 +94,13 @@ fn setup_constellations(
             radius: 1.}.to_cart();
         path.push(p);
     }
-    commands.spawn().insert(Path3D(path)).insert(Constellation);
+    commands.spawn()
+    .insert(Path3D(path.clone()))
+    .insert(Path2D(path.clone()))
+    .insert(Constellation);
 }
 
+/// Move sprites to star locations with projection
 fn draw_stars(
     mut query: Query<(&mut Transform, &mut Position3D, With<Star>)>,
     time: Res<Time>, 
@@ -126,7 +130,7 @@ fn draw_stars(
 /// Initialize equatorial grid 3D paths
 fn setup_equatorial_grid(
     mut commands: Commands
-) {
+){
     let phi_split = 20;
     let theta_split = 20;
     let resolution = 80;
@@ -140,7 +144,10 @@ fn setup_equatorial_grid(
             let p_cart: Vector4<f32> = p.to_cart();
             vertices.push(p_cart);
         }
-        commands.spawn().insert(Path3D(vertices));
+        commands.spawn()
+        .insert(Path3D(vertices.clone()))
+        .insert(Path2D(vertices.clone()))
+        .insert(Grid);
     }
     // theta circles
     for split in 0..theta_split+1 {
@@ -152,19 +159,21 @@ fn setup_equatorial_grid(
             let p_cart: Vector4<f32> = p.to_cart();
             vertices.push(p_cart);
         }
-        commands.spawn().insert(Path3D(vertices));
+        commands.spawn()
+        .insert(Path3D(vertices.clone()))
+        .insert(Path2D(vertices.clone()))
+        .insert(Grid);
     }
 }
 
 /// Project all 3D paths to 2D paths
-fn projection(
-    mut commands: Commands,
+fn path_projection(
     time: Res<Time>, 
     fov: ResMut<Fov>,
     camera: ResMut<Camera>, 
-    mut query: Query<(&mut Path3D, Option<&Constellation>)>,
+    mut query: Query<(&mut Path2D, &mut Path3D)>,
     wd: ResMut<WindowDescriptor>,
-) {
+){
     let t: f32 = time.seconds_since_startup() as f32/20.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
@@ -173,28 +182,14 @@ fn projection(
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
 
-    for (path, constellation) in query.iter_mut() { 
+    for (mut path2d, path3d) in query.iter_mut() { 
         let mut vertices_proj = vec![];
-        for vertex in &path.0 {
+        for vertex in &path3d.0 {
             let vertex_proj = proj_m * translate_m * rotation_z_m * rotation_x_m * rotation_y_m * vertex;
             let vertex_proj = vertex_proj / vertex_proj[3];
             vertices_proj.push(vertex_proj);
         }
-        if constellation.is_some() {
-            commands.spawn().insert(Path2D(vertices_proj)).insert(Constellation);
-        } else {
-            commands.spawn().insert(Path2D(vertices_proj));
-        }
-    }
-}
-
-/// Clear all 2D path for next redraw
-fn despawn_2d_paths(
-    mut commands: Commands,
-    mut query: Query<(Entity, With<Path2D>)>
-) {
-    for (e, _) in query.iter_mut() {
-        commands.entity(e).despawn();
+        path2d.0 = vertices_proj;
     }
 }
 
