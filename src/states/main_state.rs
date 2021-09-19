@@ -17,7 +17,7 @@ struct Position3D(Vector4<f32>);
 
 impl Plugin for MainState {
     fn build(&self, app: &mut AppBuilder){
-        const TIME_STEP: f32 = 1.0 / 100.0;
+        const TIME_STEP: f32 = 1.0 / 200.0;
         app
             .insert_resource(Fov(1.6))
             .insert_resource(Camera{rot_x: 0., rot_y: 0.})
@@ -33,10 +33,14 @@ impl Plugin for MainState {
                     .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
                     .with_system(path_projection.system())
                     .with_system(draw_stars.system())
+                    .with_system(render_2d_paths.system())
                 )
-            .add_system(render_2d_paths.system())
-            .add_system(fov_adjust.system())
-            .add_system(orbit_camera.system());
+                .add_system_set(
+                    SystemSet::new()
+                    .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+                    .with_system(fov_adjust.system())
+                    .with_system(orbit_camera.system())
+                );
     }
 }
 
@@ -118,7 +122,7 @@ fn draw_stars(
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
-    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(camera.rot_y));
+    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
 
@@ -182,7 +186,7 @@ fn path_projection(
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
     let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
-    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(camera.rot_y));
+    let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(t + camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
 
@@ -216,7 +220,7 @@ fn render_2d_paths(
                 lines.line_colored(
                     Vec3::new(mesh[m][0]*w, mesh[m][1]*h, 0.), 
                     Vec3::new(mesh[m+1][0]*w, mesh[m+1][1]*h, 0.), 
-                    0.0,
+                    0.,
                     color);
             }
         }
