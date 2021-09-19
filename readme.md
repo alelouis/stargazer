@@ -35,7 +35,7 @@ Stargazer is in early development (started early September 2021). The current en
 ### To Do (not in order)
 - [ ] Showing stars names
 - [ ] Align 3D world coordinates to RA/DEC and cardinal points
-- [ ] Aesthetic concerns
+- [ ] Aesthetic concerns (make it beautiful)
 - [ ] Multiple states (menu, config, etc...)
 
 ---------------
