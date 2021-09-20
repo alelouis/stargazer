@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy::app::AppExit;
 use bevy::ecs::component::Component;
 use crate::consts::*;
+use keyframe::{keyframes, AnimationSequence};
+use std::time::Duration;
 
 pub struct Pause;
 pub enum BMarkers {
@@ -27,6 +29,7 @@ impl Plugin for Pause {
         .add_system_set(
             SystemSet::on_update(AppState::Pause)
             .with_system(button_system.system())
+            .with_system(button_animation.system())
         )
         .add_system_set(
             SystemSet::on_exit(AppState::Pause)
@@ -47,17 +50,48 @@ impl FromWorld for ButtonMaterials {
     }
 }
 
+fn button_animation(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Style, &mut Timer, With<Button>)>,
+){
+    for (entity, mut style, mut timer, _) in query.iter_mut(){
+        timer.tick(Duration::from_millis(30));
+        let timer_duration = timer.duration().as_millis() as f32;
+        let elapsed_time = timer.elapsed().as_millis() as f32;
+        let t = elapsed_time / timer_duration;
+        let mut sequence = keyframes![
+            (0., 0.0), 
+            (10., 0.3),
+            (0., 1.0)
+        ];
+        sequence.advance_by(t as f64);
+        let value = sequence.now();
+        style.size = Size::new(
+            Val::Px(100.0+value), 
+            Val::Px(45.0-value));
+
+        if t == 1.0 {
+            commands.entity(entity).remove::<Timer>();
+        }
+    }
+}
+
 fn button_system(
+    mut commands: Commands,
     button_materials: Res<ButtonMaterials>,
     mut exit: EventWriter<AppExit>,
     mut interaction_query: Query<
-        (&Interaction, &mut Handle<ColorMaterial>, &Children, &ButtonMarker),
+        (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children, &ButtonMarker, Option<&Timer>),
         (Changed<Interaction>, With<Button>),
     >,
     mut text_query: Query<&mut Text>,
     mut app_state: ResMut<State<AppState>>
 ) {
-    for (interaction, mut material, children, button) in interaction_query.iter_mut() {
+    for (entity, interaction, 
+        mut material, 
+        children, 
+        button,
+        timer) in interaction_query.iter_mut() {
         let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
@@ -69,6 +103,10 @@ fn button_system(
             }
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();
+                if timer.is_none() {
+                    commands.entity(entity).insert(
+                        Timer::from_seconds(2.0, false));
+                }
             }
             Interaction::None => {
                 *material = button_materials.normal.clone();
@@ -175,7 +213,7 @@ fn setup(
                 ..Default::default()
             });
         });
-        commands
+    commands
         .spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(100.0), Val::Px(45.0)),

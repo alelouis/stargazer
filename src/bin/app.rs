@@ -7,7 +7,7 @@ use stargazer::consts::*;
 fn main() {
     App::build()
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
-        .insert_resource(WindowDescriptor {width: 1000.0, height: 1000.0, ..Default::default()})
+        .insert_resource(WindowDescriptor {width: 700.0, height: 700.0, ..Default::default()})
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Menu)
         .add_plugin(Menu)
