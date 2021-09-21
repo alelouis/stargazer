@@ -12,7 +12,15 @@ pub struct Stars;
 struct Fov(f32);
 struct Camera{rot_x: f32, rot_y: f32}
 struct Path3D(Vec<Vector4<f32>>);
-struct Path2D(Vec<Vector4<f32>>);
+//struct Path2D(Vec<Vector4<f32>>);
+enum Path2DKind {
+    PhiCircle,
+    ThetaCircle,
+    Constellation
+}
+struct Path2D{
+    data: Vec<Vector4<f32>>,
+    kind: Path2DKind}
 struct Grid;
 struct Constellation;
 struct MouseButtonPressed(bool);
@@ -162,7 +170,7 @@ fn setup_constellations(
     }
     commands.spawn()
     .insert(Path3D(path.clone()))
-    .insert(Path2D(path.clone()))
+    .insert(Path2D{data: path.clone(), kind: Path2DKind::Constellation})
     .insert(Constellation);
 }
 
@@ -212,7 +220,7 @@ fn setup_equatorial_grid(
         }
         commands.spawn()
         .insert(Path3D(vertices.clone()))
-        .insert(Path2D(vertices.clone()))
+        .insert(Path2D{data: vertices.clone(), kind: Path2DKind::PhiCircle})
         .insert(Grid);
     }
     // theta circles
@@ -227,7 +235,7 @@ fn setup_equatorial_grid(
         }
         commands.spawn()
         .insert(Path3D(vertices.clone()))
-        .insert(Path2D(vertices.clone()))
+        .insert(Path2D{data: vertices.clone(), kind: Path2DKind::ThetaCircle})
         .insert(Grid);
     }
 }
@@ -255,7 +263,7 @@ fn path_projection(
             let vertex_proj = vertex_proj / vertex_proj[3];
             vertices_proj.push(vertex_proj);
         }
-        path2d.0 = vertices_proj;
+        path2d.data = vertices_proj;
     }
 }
 
@@ -272,49 +280,62 @@ fn render_2d_paths(
             Some(x) => Color::RED,
             None => Color::Rgba{red: 1., green: 1., blue: 1., alpha: 0.05},
         };
-        let mesh = &path.0;
-        for m in 0..mesh.len()-1 {
-            if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) & (mesh[m+1][2] > -1.) & (mesh[m+1][2] < 1.) {
-                lines.line_colored(
-                    Vec3::new(mesh[m][0]*w, mesh[m][1]*h, 0.), 
-                    Vec3::new(mesh[m+1][0]*w, mesh[m+1][1]*h, 0.), 
-                    0.,
-                    color);
-                // TODO : Split theta and phi grids into two meshes
-                // right indicators
-                if (mesh[m][0] < 0.5) & (mesh[m][0] > 0.4) {
+        if matches!(path.kind, Path2DKind::ThetaCircle) {
+            let mesh = &path.data;
+            for m in 0..mesh.len()-1 {
+                if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) & (mesh[m+1][2] > -1.) & (mesh[m+1][2] < 1.) {
                     lines.line_colored(
-                        Vec3::new(0.5*w, mesh[m][1]*h, 1.), 
-                        Vec3::new(0.5*w-20., mesh[m][1]*h, 1.), 
+                        Vec3::new(mesh[m][0]*w, mesh[m][1]*h, 0.), 
+                        Vec3::new(mesh[m+1][0]*w, mesh[m+1][1]*h, 0.), 
                         0.,
-                        Color::RED);
-                }
+                        color);
 
-                // left indicators
-                if (mesh[m][0] > -0.5) & (mesh[m][0] < -0.4) {
-                    lines.line_colored(
-                        Vec3::new(-0.5*w, mesh[m][1]*h, 1.), 
-                        Vec3::new(-0.5*w+20., mesh[m][1]*h, 1.), 
-                        0.,
-                        Color::RED);
+                    // right indicators
+                    if (mesh[m][0] < 0.5) & (mesh[m][0] > 0.4) {
+                        lines.line_colored(
+                            Vec3::new(0.5*w, mesh[m][1]*h, 1.), 
+                            Vec3::new(0.5*w-20., mesh[m][1]*h, 1.), 
+                            0.,
+                            Color::RED);
+                    }
+    
+                    // left indicators
+                    if (mesh[m][0] > -0.5) & (mesh[m][0] < -0.4) {
+                        lines.line_colored(
+                            Vec3::new(-0.5*w, mesh[m][1]*h, 1.), 
+                            Vec3::new(-0.5*w+20., mesh[m][1]*h, 1.), 
+                            0.,
+                            Color::RED);
+                    }
                 }
-
-                // bottom indicators
-                if (mesh[m][1] > -0.5) & (mesh[m][1] < -0.4) {
+            }
+        } else if matches!(path.kind, Path2DKind::PhiCircle) {
+            let mesh = &path.data;
+            for m in 0..mesh.len()-1 {
+                if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) & (mesh[m+1][2] > -1.) & (mesh[m+1][2] < 1.) {
                     lines.line_colored(
-                        Vec3::new(mesh[m][0]*w, -0.5*h, 1.), 
-                        Vec3::new(mesh[m][0]*w, -0.5*h+20., 1.), 
+                        Vec3::new(mesh[m][0]*w, mesh[m][1]*h, 0.), 
+                        Vec3::new(mesh[m+1][0]*w, mesh[m+1][1]*h, 0.), 
                         0.,
-                        Color::GREEN);
-                }
-
-                // top indicators
-                if (mesh[m][1] < 0.5) & (mesh[m][1] > 0.4) {
-                    lines.line_colored(
-                        Vec3::new(mesh[m][0]*w, 0.5*h, 1.), 
-                        Vec3::new(mesh[m][0]*w, 0.5*h-20., 1.), 
-                        0.,
-                        Color::GREEN);
+                        color);
+   
+                    // bottom indicators
+                    if (mesh[m][1] > -0.5) & (mesh[m][1] < -0.4) {
+                        lines.line_colored(
+                            Vec3::new(mesh[m][0]*w, -0.5*h, 1.), 
+                            Vec3::new(mesh[m][0]*w, -0.5*h+20., 1.), 
+                            0.,
+                            Color::GREEN);
+                    }
+    
+                    // top indicators
+                    if (mesh[m][1] < 0.5) & (mesh[m][1] > 0.4) {
+                        lines.line_colored(
+                            Vec3::new(mesh[m][0]*w, 0.5*h, 1.), 
+                            Vec3::new(mesh[m][0]*w, 0.5*h-20., 1.), 
+                            0.,
+                            Color::GREEN);
+                    }
                 }
             }
         }
