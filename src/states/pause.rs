@@ -35,6 +35,7 @@ impl Plugin for Pause {
             SystemSet::on_exit(AppState::Pause)
             .with_system(cleanup_system::<Button>.system())
             .with_system(cleanup_system::<Text>.system())
+            .with_system(cleanup_system::<Node>.system())
         );
     }
 }
@@ -60,15 +61,15 @@ fn button_animation(
         let elapsed_time = timer.elapsed().as_millis() as f32;
         let t = elapsed_time / timer_duration;
         let mut sequence = keyframes![
-            (0., 0.0), 
-            (10., 0.3),
-            (0., 1.0)
+            (1., 0.0), 
+            (2., 0.3),
+            (1., 1.0)
         ];
         sequence.advance_by(t as f64);
         let value = sequence.now();
         style.size = Size::new(
-            Val::Px(100.0+value), 
-            Val::Px(45.0-value));
+            Val::Px(100.0), 
+            Val::Px(45.0*value));
 
         if t == 1.0 {
             commands.entity(entity).remove::<Timer>();
@@ -81,7 +82,7 @@ fn button_system(
     button_materials: Res<ButtonMaterials>,
     mut exit: EventWriter<AppExit>,
     mut interaction_query: Query<
-        (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children, &ButtonMarker, Option<&Timer>),
+        (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children, &ButtonMarker, Option<&mut Timer>),
         (Changed<Interaction>, With<Button>),
     >,
     mut text_query: Query<&mut Text>,
@@ -91,7 +92,7 @@ fn button_system(
         mut material, 
         children, 
         button,
-        timer) in interaction_query.iter_mut() {
+        mut timer) in interaction_query.iter_mut() {
         let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
@@ -104,8 +105,9 @@ fn button_system(
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();
                 if timer.is_none() {
-                    commands.entity(entity).insert(
-                        Timer::from_seconds(2.0, false));
+                    commands.entity(entity).insert(Timer::from_seconds(2.0, false));
+                } else {
+                    timer.unwrap().reset();
                 }
             }
             Interaction::None => {
@@ -133,6 +135,7 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     button_materials: Res<ButtonMaterials>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     commands.spawn_bundle(UiCameraBundle::default());
     commands.spawn_bundle(TextBundle {
@@ -186,10 +189,21 @@ fn setup(
         ..Default::default()
     });
     commands
-        .spawn_bundle(ButtonBundle {
+    .spawn_bundle(NodeBundle {
+        style: Style {
+            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::SpaceEvenly,
+            ..Default::default()
+        },
+        material: materials.add(Color::NONE.into()),
+        ..Default::default()
+    })
+    .with_children(|parent| {
+        // left vertical fill (border)
+        parent.spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(100.0), Val::Px(45.0)),
-                margin: Rect::all(Val::Auto),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 align_self: AlignSelf::Center,
@@ -213,11 +227,12 @@ fn setup(
                 ..Default::default()
             });
         });
-    commands
+    })
+    .with_children(|parent| {
+        parent
         .spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(100.0), Val::Px(45.0)),
-                margin: Rect::all(Val::Auto),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 align_self: AlignSelf::Center,
@@ -241,4 +256,5 @@ fn setup(
                 ..Default::default()
             });
         });
+    });
 }

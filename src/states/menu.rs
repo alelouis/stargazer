@@ -64,15 +64,15 @@ fn button_animation(
         let elapsed_time = timer.elapsed().as_millis() as f32;
         let t = elapsed_time / timer_duration;
         let mut sequence = keyframes![
-            (0., 0.0), 
-            (10., 0.3),
-            (0., 1.0)
+            (1., 0.0), 
+            (2., 0.3),
+            (1., 1.0)
         ];
         sequence.advance_by(t as f64);
         let value = sequence.now();
         style.size = Size::new(
-            Val::Px(100.0+value), 
-            Val::Px(45.0-value));
+            Val::Px(100.0), 
+            Val::Px(45.0*value));
 
         if t == 1.0 {
             commands.entity(entity).remove::<Timer>();
@@ -84,7 +84,7 @@ fn button_system(
     mut commands: Commands,
     button_materials: Res<ButtonMaterials>,
     mut interaction_query: Query<
-        (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children, Option<&Timer>),
+        (Entity, &Interaction, &mut Handle<ColorMaterial>, &Children, Option<&mut Timer>),
         (Changed<Interaction>, With<Button>),
     >,
     mut text_query: Query<&mut Text>,
@@ -94,7 +94,7 @@ fn button_system(
         interaction, 
         mut material, 
         children, 
-        timer) in interaction_query.iter_mut() {
+        mut timer) in interaction_query.iter_mut() {
         let mut text = text_query.get_mut(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
@@ -104,8 +104,9 @@ fn button_system(
             Interaction::Hovered => {
                 *material = button_materials.hovered.clone();
                 if timer.is_none() {
-                    commands.entity(entity).insert(
-                        Timer::from_seconds(2.0, false));
+                    commands.entity(entity).insert(Timer::from_seconds(2.0, false));
+                } else {
+                    timer.unwrap().reset();
                 }
             }
             Interaction::None => {
