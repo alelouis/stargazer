@@ -179,7 +179,7 @@ fn draw_stars(
     let t: f32 = time.seconds_since_startup() as f32/1.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
-    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., -1.5));
+    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.0));
     let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
@@ -199,7 +199,7 @@ fn setup_equatorial_grid(
 ){
     let phi_split = 20;
     let theta_split = 20;
-    let resolution = 80;
+    let resolution = 300;
     // phi circles
     for split in 0..phi_split+1 {
         let mut vertices = vec![];
@@ -243,7 +243,7 @@ fn path_projection(
     let t: f32 = time.seconds_since_startup() as f32/100.;
     let aspect = wd.width / wd.height;
     let proj_m: Matrix4<f32> = perspective(Rad(fov.0), aspect,0.1, 100.);
-    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., -1.5));
+    let translate_m: Matrix4<f32> = Matrix4::from_translation(Vector3::new(0., 0., 0.));
     let rotation_y_m: Matrix4<f32> = Matrix4::from_angle_y(Rad(camera.rot_y));
     let rotation_x_m: Matrix4<f32> = Matrix4::from_angle_x(Rad(camera.rot_x));
     let rotation_z_m: Matrix4<f32> = Matrix4::from_angle_z(Rad(0.));
@@ -280,6 +280,42 @@ fn render_2d_paths(
                     Vec3::new(mesh[m+1][0]*w, mesh[m+1][1]*h, 0.), 
                     0.,
                     color);
+                // TODO : Split theta and phi grids into two meshes
+                // right indicators
+                if (mesh[m][0] < 0.5) & (mesh[m][0] > 0.4) {
+                    lines.line_colored(
+                        Vec3::new(0.5*w, mesh[m][1]*h, 1.), 
+                        Vec3::new(0.5*w-20., mesh[m][1]*h, 1.), 
+                        0.,
+                        Color::RED);
+                }
+
+                // left indicators
+                if (mesh[m][0] > -0.5) & (mesh[m][0] < -0.4) {
+                    lines.line_colored(
+                        Vec3::new(-0.5*w, mesh[m][1]*h, 1.), 
+                        Vec3::new(-0.5*w+20., mesh[m][1]*h, 1.), 
+                        0.,
+                        Color::RED);
+                }
+
+                // bottom indicators
+                if (mesh[m][1] > -0.5) & (mesh[m][1] < -0.4) {
+                    lines.line_colored(
+                        Vec3::new(mesh[m][0]*w, -0.5*h, 1.), 
+                        Vec3::new(mesh[m][0]*w, -0.5*h+20., 1.), 
+                        0.,
+                        Color::GREEN);
+                }
+
+                // top indicators
+                if (mesh[m][1] < 0.5) & (mesh[m][1] > 0.4) {
+                    lines.line_colored(
+                        Vec3::new(mesh[m][0]*w, 0.5*h, 1.), 
+                        Vec3::new(mesh[m][0]*w, 0.5*h-20., 1.), 
+                        0.,
+                        Color::GREEN);
+                }
             }
         }
     }
