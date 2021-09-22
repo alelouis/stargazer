@@ -32,9 +32,12 @@ Stargazer is in early development (started early September 2021). The current en
 - [x] Processing star data to theta/phi coordinates
 - [x] Drawing stars individually from sprite
 - [x] Multiple states (menu, config, etc...)
+- [x] GUI animation
 
 ### To Do (not in order)
+- [ ] Correct bug with multiple kb inputs for state transition
 - [ ] Showing stars names
+- [ ] Showing ra/dec values on screen border
 - [ ] Align 3D world coordinates to RA/DEC and cardinal points
 - [ ] Aesthetic concerns (make it beautiful)
 

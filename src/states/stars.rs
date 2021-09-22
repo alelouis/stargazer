@@ -12,7 +12,7 @@ pub struct Stars;
 struct Fov(f32);
 struct Camera{rot_x: f32, rot_y: f32}
 struct Path3D(Vec<Vector4<f32>>);
-//struct Path2D(Vec<Vector4<f32>>);
+
 enum Path2DKind {
     PhiCircle,
     ThetaCircle,
@@ -45,7 +45,7 @@ impl Plugin for Stars {
             .with_system(fov_adjust.system())
             .with_system(orbit_camera.system())
             .with_system(pause.system())
-            .with_system(ui_example.system())
+            //with_system(ui_example.system())
         )
         .add_system_set(
             SystemSet::on_enter(AppState::Stars)
@@ -62,7 +62,7 @@ impl Plugin for Stars {
         );
     }
 }
-
+/*
 fn ui_example(egui_context: ResMut<EguiContext>, app_state: Res<State<AppState>>) {
     let mut name = "Alexis".to_string();
     let mut age = 23;
@@ -90,6 +90,7 @@ fn ui_example(egui_context: ResMut<EguiContext>, app_state: Res<State<AppState>>
     }
 
 }
+ */
 
 fn cleanup_system<T: Component>(
     mut commands: Commands,
