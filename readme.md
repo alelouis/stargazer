@@ -37,9 +37,11 @@ Stargazer is in early development (started early September 2021). The current en
 ### To Do (not in order)
 - [ ] Correct bug with multiple kb inputs for state transition
 - [ ] Showing stars names
-- [ ] Showing ra/dec values on screen border
+- [ ] Showing ra/dec values on screen border **(WIP)**
+- [ ] Adaptive grid resolution
+- [ ] Adaptive scene generation (generate only what can be seen by the camera)
 - [ ] Align 3D world coordinates to RA/DEC and cardinal points
-- [ ] Aesthetic concerns (make it beautiful)
+- [ ] Aesthetic concerns (make it beautiful) **(When I'm Bored)**
 
 
 ---------------
