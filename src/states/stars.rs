@@ -278,9 +278,8 @@ fn path_projection(
 }
 
 fn render_grid_markers(
-    mut lines: ResMut<DebugLines>, 
     mut query: Query<&mut Path2D>,
-    mut query_text: Query<Entity, With<GridMarker>>,
+    query_text: Query<Entity, With<GridMarker>>,
     wd: ResMut<WindowDescriptor>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -290,101 +289,164 @@ fn render_grid_markers(
     }
     let w = wd.width;
     let h = wd.height;
-    for path in query.iter_mut() {
-        
+    for path in query.iter_mut() { 
         if matches!(path.kind, Path2DKind::ThetaCircle) {
-            let mut drawn_right = false;
-            let mut drawn_left = false;
             let mesh = &path.data;
+            let mut right_marker: Vector4<f32> = Vector4::new(-1., -1., -1., -1.);
+            let mut left_marker: Vector4<f32> = Vector4::new(1., 1., 1., 1.); 
+            let mut draw_right = false;
+            let mut draw_left = false;
             for m in 0..mesh.len()-1 {
+                if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) {
                     // right indicators
-                    if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) {
-                        if !drawn_right & (mesh[m][0] < 0.7) & (mesh[m][0] > 0.4) {
-                            /* 
-                            lines.line_colored(
-                                Vec3::new(0.5*w, mesh[m][1]*h, 1.), 
-                                Vec3::new(0.5*w-20., mesh[m][1]*h, 1.), 
-                                0.,
-                                Color::RED); 
-                            */
-                                let i;
-                                let j;
-                                let k;
-                                if m == 0 {
-                                    i = mesh.len()-1;
-                                    j = 0;
-                                    k = 1;
-                                } else if m == mesh.len()-1 {
-                                    i = mesh.len()-2;
-                                    j = mesh.len()-1;
-                                    k = 0;
-                                } else {
-                                    i = m-1;
-                                    j = m;
-                                    k = m+1;
-                                }
-                                drawn_right = true;
-                                commands.spawn_bundle(TextBundle {
-                                    style: Style {
-                                        position_type: PositionType::Absolute,
-                                        position: Rect {
-                                            bottom: Val::Px(h/2. + (mesh[i][1]*h)/1. + 5.),
-                                            left: Val::Px(w-40.),
-                                            ..Default::default()
-                                        },
-                                        ..Default::default()
-                                    },
-                                    text: Text::with_section(
-                                        &path.marker,
-                                        TextStyle {
-                                            font: asset_server.load("fonts/ShareTechMono-Regular.ttf"),
-                                            font_size: 13.0,
-                                            color: Color::GRAY,
-                                        },
-                                        TextAlignment {
-                                            horizontal: HorizontalAlign::Center,
-                                            ..Default::default()
-                                        },
-                                    ),
-                                    ..Default::default()
-                                }).insert(GridMarker);
+                    if (mesh[m][0] < 0.5) & (mesh[m][0] > 0.2) & (mesh[m][1] < 0.5) & (mesh[m][1] > -0.5) {
+                        draw_right = true;
+                        if mesh[m][0] > right_marker[0] {
+                            right_marker[0] = mesh[m][0];
+                            right_marker[1] = mesh[m][1];
                         }
-
-                        // left indicators
-                        if !drawn_left & (mesh[m][0] > -0.5) & (mesh[m][0] < -0.45) {
-                            lines.line_colored(
-                                Vec3::new(-0.5*w, mesh[m][1]*h, 1.), 
-                                Vec3::new(-0.5*w+20., mesh[m][1]*h, 1.), 
-                                0.,
-                                Color::RED);
-                                drawn_left = true;
+                    }
+                    // left indicators
+                    if (mesh[m][0] > -0.5) & (mesh[m][0] < -0.2) & & (mesh[m][1] < 0.5) & (mesh[m][1] > -0.5){
+                        draw_left = true;
+                        if mesh[m][0] < left_marker[0] {
+                            left_marker[0] = mesh[m][0];
+                            left_marker[1] = mesh[m][1];
                         }
                     }
                 }
+            }
+            if draw_right {
+                commands.spawn_bundle(TextBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        position: Rect {
+                            bottom: Val::Px(h/2. + (right_marker[1]*h) + 5.),
+                            left: Val::Px(w-40.),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    text: Text::with_section(
+                        &path.marker,
+                        TextStyle {
+                            font: asset_server.load("fonts/ShareTechMono-Regular.ttf"),
+                            font_size: 13.0,
+                            color: Color::GRAY,
+                        },
+                        TextAlignment {
+                            horizontal: HorizontalAlign::Center,
+                            ..Default::default()
+                        },
+                    ),
+                    ..Default::default()
+                }).insert(GridMarker);
+            }
+            if draw_left {
+                commands.spawn_bundle(TextBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        position: Rect {
+                            bottom: Val::Px(h/2. + (left_marker[1]*h) + 5.),
+                            left: Val::Px(10.),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    text: Text::with_section(
+                        &path.marker,
+                        TextStyle {
+                            font: asset_server.load("fonts/ShareTechMono-Regular.ttf"),
+                            font_size: 13.0,
+                            color: Color::GRAY,
+                        },
+                        TextAlignment {
+                            horizontal: HorizontalAlign::Center,
+                            ..Default::default()
+                        },
+                    ),
+                    ..Default::default()
+                }).insert(GridMarker);
+            }
+            
         } else if matches!(path.kind, Path2DKind::PhiCircle) {
-            let mut drawn_bottom = false;
-            let mut drawn_top = false;
             let mesh = &path.data;
+            let mut top_marker: Vector4<f32> = Vector4::new(-1., -1., -1., -1.);
+            let mut bottom_marker: Vector4<f32> = Vector4::new(1., 1., 1., 1.); 
+            let mut draw_top = false;
+            let mut draw_bottom = false;
             for m in 0..mesh.len()-1 {
-                // bottom indicators
-                if !drawn_bottom & (mesh[m][1] > -0.5) & (mesh[m][1] < -0.45) {
-                    lines.line_colored(
-                        Vec3::new(mesh[m][0]*w, -0.5*h, 1.), 
-                        Vec3::new(mesh[m][0]*w, -0.5*h+20., 1.), 
-                        0.,
-                        Color::GREEN);
-                        drawn_bottom = true;
+                
+                if (mesh[m][2] > -1.) & (mesh[m][2] < 1.) {
+                    // top indicators
+                    if (mesh[m][1] < 0.5) & (mesh[m][1] > 0.2) & (mesh[m][0] < 0.5) & (mesh[m][0] > -0.5) {
+                        draw_top = true;
+                        if mesh[m][1] > top_marker[1] {
+                            top_marker[0] = mesh[m][0];
+                            top_marker[1] = mesh[m][1];
+                        }
+                    }
+                    // bottom indicators
+                    if (mesh[m][1] > -0.5) & (mesh[m][1] < -0.2) & & (mesh[m][0] < 0.5) & (mesh[m][0] > -0.5){
+                        draw_bottom = true;
+                        if mesh[m][1] < bottom_marker[1] {
+                            bottom_marker[0] = mesh[m][0];
+                            bottom_marker[1] = mesh[m][1];
+                        }
+                    }
                 }
-
-                // top indicators
-                if !drawn_top & (mesh[m][1] < 0.5) & (mesh[m][1] > 0.45) {
-                    lines.line_colored(
-                        Vec3::new(mesh[m][0]*w, 0.5*h, 1.), 
-                        Vec3::new(mesh[m][0]*w, 0.5*h-20., 1.), 
-                        0.,
-                        Color::GREEN);
-                        drawn_top = false;
-                }
+            }  
+            if draw_top {
+                commands.spawn_bundle(TextBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        position: Rect {
+                            bottom: Val::Px(h-20.),
+                            left: Val::Px(h/2. + top_marker[0]*w),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    text: Text::with_section(
+                        &path.marker,
+                        TextStyle {
+                            font: asset_server.load("fonts/ShareTechMono-Regular.ttf"),
+                            font_size: 13.0,
+                            color: Color::GRAY,
+                        },
+                        TextAlignment {
+                            horizontal: HorizontalAlign::Center,
+                            ..Default::default()
+                        },
+                    ),
+                    ..Default::default()
+                }).insert(GridMarker);
+            }
+            if draw_bottom {
+                commands.spawn_bundle(TextBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        position: Rect {
+                            bottom: Val::Px(20.),
+                            left: Val::Px(h/2. + bottom_marker[0]*w),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    text: Text::with_section(
+                        &path.marker,
+                        TextStyle {
+                            font: asset_server.load("fonts/ShareTechMono-Regular.ttf"),
+                            font_size: 13.0,
+                            color: Color::GRAY,
+                        },
+                        TextAlignment {
+                            horizontal: HorizontalAlign::Center,
+                            ..Default::default()
+                        },
+                    ),
+                    ..Default::default()
+                }).insert(GridMarker);
             }
         }
     }
