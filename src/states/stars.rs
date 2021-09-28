@@ -11,6 +11,7 @@ use bevy_egui::{egui, EguiContext, EguiPlugin};
 pub struct Stars;
 struct Fov(f32);
 struct Camera{rot_x: f32, rot_y: f32}
+struct MouseInertia{x: f32, y: f32, z: f32}
 struct Path3D(Vec<Vector4<f32>>);
 
 enum Path2DKind {
@@ -35,6 +36,7 @@ impl Plugin for Stars {
         app
         .insert_resource(Fov(1.6))
         .insert_resource(Camera{rot_x: 0., rot_y: 0.})
+        .insert_resource(MouseInertia{x: 0., y: 0., z: 0.})
         .insert_resource(MouseButtonPressed(false))
         .add_plugin(DebugLinesPlugin)
         .add_plugin(EguiPlugin)
@@ -495,24 +497,28 @@ fn render_2d_paths(
 /// Adjust field of view with mousewheel or trackpad
 fn fov_adjust(
     mut scroll_evr: EventReader<MouseWheel>, 
+    mut mouse_inertia: ResMut<MouseInertia>,
     mut fov: ResMut<Fov>
 ){
     use bevy::input::mouse::MouseScrollUnit;
     for ev in scroll_evr.iter() {
         match ev.unit {
             MouseScrollUnit::Line => {
-                fov.0 = f32::min(f32::max(fov.0 + ev.y * 0.1, 0.1), 3.14);
+                mouse_inertia.z += ev.y * 0.005;
             }
             MouseScrollUnit::Pixel => {
-                fov.0 = f32::min(f32::max(fov.0 + ev.y * 0.001, 0.1), 3.14);
+                mouse_inertia.z += ev.y * 0.0001;
             }
         }
     }
+    mouse_inertia.z -= mouse_inertia.z / 40.;
+    fov.0 = f32::min(f32::max(fov.0 - mouse_inertia.z, 0.1), 3.14/1.5);
 }
 
 /// Camera controller
 fn orbit_camera(
     fov: ResMut<Fov>,
+    mut mouse_inertia: ResMut<MouseInertia>,
     mut camera: ResMut<Camera>,
     mut mouse_pressed: ResMut<MouseButtonPressed>,
     mut motion_evr: EventReader<MouseMotion>,
@@ -525,10 +531,17 @@ fn orbit_camera(
             ElementState::Released => {mouse_pressed.0 = false;}
         }
     }
-    if mouse_pressed.0 {
+    if mouse_pressed.0 { 
         for ev in motion_evr.iter(){
+            mouse_inertia.x += ev.delta.y as f32 / 5000.;
+            mouse_inertia.y += ev.delta.x as f32 / 5000.;
             camera.rot_x -= fov.0 / 3.14 * ev.delta.y as f32 / 300.;
             camera.rot_y -= fov.0 / 3.14 * ev.delta.x as f32 / 300.;
         }
+    } else {
+        camera.rot_x -= fov.0 / 3.14 * mouse_inertia.x;
+        camera.rot_y -= fov.0 / 3.14 * mouse_inertia.y;
     }
+    mouse_inertia.x -= mouse_inertia.x / 40.;
+    mouse_inertia.y -= mouse_inertia.y / 40.;
 }

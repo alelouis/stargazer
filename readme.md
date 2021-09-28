@@ -32,7 +32,9 @@ Stargazer is in early development (started early September 2021). The current en
 - [x] Processing star data to theta/phi coordinates
 - [x] Drawing stars individually from sprite
 - [x] Multiple states (menu, config, etc...)
-- [x] GUI animation
+- [x] GUI button animation
+- [x] FOV smoothing
+- [x] Orbit camera smoothing
 
 ### To Do (not in order)
 - [ ] Correct bug with multiple kb inputs for state transition
