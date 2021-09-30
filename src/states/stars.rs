@@ -96,7 +96,7 @@ fn ui_infos(
                     });
                     ui.horizontal(|ui| {
                         ui.add(egui::Label::new("Rotation:").text_color(egui::Color32::from_rgb(110, 255, 110)));
-                        ui.add(egui::Label::new(format!("({:.2}°, {:.2}°) rad", camera.rot_x, camera.rot_y)));
+                        ui.add(egui::Label::new(format!("({:.2}, {:.2}) rad", camera.rot_x, camera.rot_y)));
                     });
                     ui.horizontal(|ui| {
                         ui.add(egui::Label::new("Stars:").text_color(egui::Color32::from_rgb(110, 255, 110)));
