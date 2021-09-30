@@ -1,5 +1,7 @@
 # Stargazer
 
+
+
 ## Objectives
 **I am building a star explorer application : Stargazer.**
 
@@ -10,18 +12,10 @@ This project serves as a proxy for me to get better at:
 - Astronomy fancy details
 - Shaders ? Maybe ?
 
-## How to use
-With Rust installed, run one of the binaries available:
-```bash
-cargo run --bin app --release
-```
-First compilation will take some time, see [dynamic linking](https://bevyengine.org/learn/book/getting-started/setup/) for faster compilation times. 
+### Current status
+https://user-images.githubusercontent.com/6841652/135526724-30507e3a-f4a9-4605-9730-406ef8cbe9e1.mp
 
-------------
-
-## Status
 Stargazer is in early development (started early September 2021). The current envisioned features implemented/to be implemented are listed below.
-
 
 ### Done
 - [x] Custom 3D to 2D projection
@@ -45,9 +39,19 @@ Stargazer is in early development (started early September 2021). The current en
 - [ ] Align 3D world coordinates to RA/DEC and cardinal points
 - [ ] Aesthetic concerns (make it beautiful) **(When I'm Bored)**
 
+------------
+## How to use
+With Rust installed, run one of the binaries available:
+```bash
+cargo run --bin app --release
+```
+First compilation will take some time, see [dynamic linking](https://bevyengine.org/learn/book/getting-started/setup/) for faster compilation times. 
 
----------------
-### Preview
-https://user-images.githubusercontent.com/6841652/133923382-85363336-837d-4402-91f4-a62a43e18de1.mp4
+------------
+
+
+
+
+
 
 
