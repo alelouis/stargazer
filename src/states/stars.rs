@@ -29,6 +29,7 @@ struct Constellation;
 struct MouseButtonPressed(bool);
 struct Star;
 struct Position3D(Vector4<f32>);
+struct FpsLog(Vec<f32>);
 
 impl Plugin for Stars {
     fn build(&self, app: &mut AppBuilder){
@@ -38,6 +39,7 @@ impl Plugin for Stars {
         .insert_resource(Camera{rot_x: 0., rot_y: 0.})
         .insert_resource(MouseInertia{x: 0., y: 0., z: 0.})
         .insert_resource(MouseButtonPressed(false))
+        .insert_resource(FpsLog(vec![0.; 300]))
         .add_plugin(DebugLinesPlugin)
         .add_plugin(EguiPlugin)
         .add_system_set(
@@ -50,7 +52,7 @@ impl Plugin for Stars {
             .with_system(fov_adjust.system())
             .with_system(orbit_camera.system())
             .with_system(pause.system())
-            //with_system(ui_example.system())
+            .with_system(ui_infos.system())
         )
         .add_system_set(
             SystemSet::on_enter(AppState::Stars)
@@ -67,26 +69,46 @@ impl Plugin for Stars {
         );
     }
 }
-/*
-fn ui_example(egui_context: ResMut<EguiContext>, app_state: Res<State<AppState>>) {
-    let mut name = "Alexis".to_string();
-    let mut age = 23;
+
+fn ui_infos(
+    egui_context: ResMut<EguiContext>, 
+    app_state: Res<State<AppState>>,
+    mut query_stars: Query<(&mut Transform, &mut Position3D, With<Star>)>,
+    fov: Res<Fov>,
+    camera: Res<Camera>,
+    time: Res<Time>,
+    mut fps: ResMut<FpsLog>
+) {
     match app_state.current() {
         AppState::Menu => {
             // TODO: play menu music
         }
         AppState::Stars => {
-            egui::Window::new("Hello").show(egui_context.ctx(), |ui| {
-                ui.heading("My egui Application");
-                ui.horizontal(|ui| {
-                    ui.label("Your name: ");
-                    ui.text_edit_singleline(&mut name);
+            egui::Window::new("Infos")
+            .title_bar(false)
+            .resizable(false)
+            .min_width(500.0)
+            .show(egui_context.ctx(), |ui| {
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.add(egui::Label::new("Field Of View:").text_color(egui::Color32::from_rgb(110, 255, 110)));
+                        ui.add(egui::Label::new(format!("{:.2} rad", fov.0)));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.add(egui::Label::new("Rotation:").text_color(egui::Color32::from_rgb(110, 255, 110)));
+                        ui.add(egui::Label::new(format!("({:.2}°, {:.2}°) rad", camera.rot_x, camera.rot_y)));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.add(egui::Label::new("Stars:").text_color(egui::Color32::from_rgb(110, 255, 110)));
+                        ui.add(egui::Label::new(format!("{}", query_stars.iter_mut().count())));
+                    });
+                    fps.0.remove(0);
+                    fps.0.push(1000./(time.delta().as_millis() as f32));
+                    ui.horizontal(|ui| {
+                        ui.add(egui::Label::new("Framerate:").text_color(egui::Color32::from_rgb(110, 255, 110)));
+                        ui.add(egui::Label::new(format!("{:.0}", fps.0.iter().sum::<f32>()/fps.0.len() as f32)));
+                    });
                 });
-                ui.add(egui::Slider::new(&mut age, 0..=120).text("age"));
-                if ui.button("Click each year").clicked() {
-                    age += 1;
-                }
-                ui.label(format!("Hello '{}', age {}", name, age));
             });
         }
         AppState::Pause => {
@@ -95,7 +117,7 @@ fn ui_example(egui_context: ResMut<EguiContext>, app_state: Res<State<AppState>>
     }
 
 }
- */
+
 
 fn cleanup_system<T: Component>(
     mut commands: Commands,
@@ -404,7 +426,7 @@ fn render_grid_markers(
                         position_type: PositionType::Absolute,
                         position: Rect {
                             bottom: Val::Px(h-20.),
-                            left: Val::Px(h/2. + top_marker[0]*w),
+                            left: Val::Px(w/2. + top_marker[0]*w),
                             ..Default::default()
                         },
                         ..Default::default()
@@ -430,7 +452,7 @@ fn render_grid_markers(
                         position_type: PositionType::Absolute,
                         position: Rect {
                             bottom: Val::Px(20.),
-                            left: Val::Px(h/2. + bottom_marker[0]*w),
+                            left: Val::Px(w/2. + bottom_marker[0]*w),
                             ..Default::default()
                         },
                         ..Default::default()
@@ -466,7 +488,7 @@ fn render_2d_paths(
     for (path, constellation) in query.iter_mut() {
         let color = match constellation {
             Some(x) => Color::RED,
-            None => Color::Rgba{red: 1., green: 1., blue: 1., alpha: 0.05},
+            None => Color::Rgba{red: 1., green: 1., blue: 1., alpha: 0.01},
         };
         if matches!(path.kind, Path2DKind::ThetaCircle) {
             let mesh = &path.data;
