@@ -39,12 +39,12 @@ impl Plugin for Stars {
         .insert_resource(Camera{rot_x: 0., rot_y: 0.})
         .insert_resource(MouseInertia{x: 0., y: 0., z: 0.})
         .insert_resource(MouseButtonPressed(false))
-        .insert_resource(FpsLog(vec![0.; 300]))
+        .insert_resource(FpsLog(vec![0.; 150]))
         .add_plugin(DebugLinesPlugin)
         .add_plugin(EguiPlugin)
         .add_system_set(
             SystemSet::on_update(AppState::Stars)
-            .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
+        //    .with_run_criteria(FixedTimestep::step(TIME_STEP as f64))
             .with_system(path_projection.system())
             .with_system(draw_stars.system())
             .with_system(render_2d_paths.system())
@@ -484,7 +484,7 @@ fn render_2d_paths(
 ){
     let w = wd.width;
     let h = wd.height;
-    let step_size = 5;
+    let step_size = 1;
     for (path, constellation) in query.iter_mut() {
         let color = match constellation {
             Some(x) => Color::RED,

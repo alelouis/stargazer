@@ -11,6 +11,7 @@ fn main() {
             title: "Stargazer".to_string(), 
             width: 1200.0, 
             height: 700.0, 
+            vsync: false,
             ..Default::default()})
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Menu)
