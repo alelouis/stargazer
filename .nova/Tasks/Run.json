@@ -1,0 +1,14 @@
+{
+  "actions" : {
+    "build" : {
+      "enabled" : true,
+      "script" : "cargo build --release"
+    },
+    "run" : {
+      "enabled" : true,
+      "script" : "cargo run --bin app --release"
+    }
+  },
+  "buildBeforeRunning" : true,
+  "identifier" : "2ACFDE9B-60B2-41E0-86B2-A00B6A4B04D5"
+}

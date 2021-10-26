@@ -1,0 +1,10 @@
+{
+  "actions" : {
+    "run" : {
+      "enabled" : true,
+      "script" : "cargo check"
+    }
+  },
+  "identifier" : "003810F0-59C7-4982-9241-45358FB87341",
+  "openLogOnRun" : "start"
+}
